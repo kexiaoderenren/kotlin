@@ -1,0 +1,3 @@
+package
+
+public fun indexer(): kotlin.collections.Map<kotlin.Int, kotlin.Int>

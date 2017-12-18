@@ -38,7 +38,7 @@ class TypeVariableTypeConstructor(private val builtIns: KotlinBuiltIns, val debu
 
     override fun getBuiltIns() = builtIns
 
-    override fun toString() = "TypeVariable($debugName)"
+    override fun toString() = "TypeVariable($debugName@${this.hashCode().rem(1000)})"
 }
 
 sealed class NewTypeVariable(builtIns: KotlinBuiltIns, name: String) {
