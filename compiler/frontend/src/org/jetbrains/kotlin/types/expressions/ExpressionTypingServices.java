@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.types.expressions;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.builtins.DefaultBuiltIns;
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns;
 import org.jetbrains.kotlin.config.LanguageFeature;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -146,32 +147,40 @@ public class ExpressionTypingServices {
             @NotNull KtDeclarationWithBody function,
             @NotNull FunctionDescriptor functionDescriptor,
             @NotNull DataFlowInfo dataFlowInfo,
-            @Nullable KotlinType expectedReturnType,
             BindingTrace trace
     ) {
-        if (expectedReturnType == null) {
-            expectedReturnType = functionDescriptor.getReturnType();
-            if (!function.hasBlockBody() && !function.hasDeclaredReturnType()) {
-                expectedReturnType = NO_EXPECTED_TYPE;
-            }
-        }
-        checkFunctionReturnType(function, ExpressionTypingContext.newContext(
-                trace,
-                functionInnerScope, dataFlowInfo, expectedReturnType != null ? expectedReturnType : NO_EXPECTED_TYPE, getLanguageVersionSettings()
-        ));
-    }
-
-    /*package*/ void checkFunctionReturnType(KtDeclarationWithBody function, ExpressionTypingContext context) {
         KtExpression bodyExpression = function.getBodyExpression();
         if (bodyExpression == null) return;
 
-        boolean blockBody = function.hasBlockBody();
-        ExpressionTypingContext newContext =
-                blockBody
-                ? context.replaceExpectedType(NO_EXPECTED_TYPE)
-                : context;
+        ExpressionTypingContext context = ExpressionTypingContext.newContext(
+                trace, functionInnerScope, dataFlowInfo,
+                calculateExpectedTypeForFunctionBody(function, functionDescriptor),
+                getLanguageVersionSettings()
+        );
 
-        expressionTypingFacade.getTypeInfo(bodyExpression, newContext, blockBody);
+        expressionTypingFacade.getTypeInfo(bodyExpression, context, /* isStatement = */ function.hasBlockBody());
+    }
+
+    private static KotlinType calculateExpectedTypeForFunctionBody(KtDeclarationWithBody function, FunctionDescriptor descriptor) {
+        KotlinType typeFromDescriptor = descriptor.getReturnType();
+
+        // Not fully initialized descriptor or some errors: use NO_EXPECTED_TYPE
+        if (typeFromDescriptor == null) {
+            return NO_EXPECTED_TYPE;
+        }
+
+        // Function with block body: use NO_EXPECTED_TYPE
+        if (function.hasBlockBody()) {
+            return NO_EXPECTED_TYPE;
+        }
+
+        // Function with expression body and without explicit return type: use NO_EXPECTED_TYPE to not constraint inference
+        if (!function.hasBlockBody() && !function.hasDeclaredReturnType()) {
+            return NO_EXPECTED_TYPE;
+        }
+
+        // Otherwise, it's a function with expression body and with explicit return type, and for such cases we use type from descriptor
+        return typeFromDescriptor;
     }
 
     @NotNull

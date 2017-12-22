@@ -914,7 +914,7 @@ public class BodyResolver {
 
         if (function.hasBody()) {
             expressionTypingServices.checkFunctionReturnType(
-                    innerScope, function, functionDescriptor, dataFlowInfo != null ? dataFlowInfo : outerDataFlowInfo, null, trace);
+                    innerScope, function, functionDescriptor, dataFlowInfo != null ? dataFlowInfo : outerDataFlowInfo, trace);
         }
 
         assert functionDescriptor.getReturnType() != null;
