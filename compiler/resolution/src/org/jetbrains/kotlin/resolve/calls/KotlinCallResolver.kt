@@ -62,7 +62,9 @@ class KotlinCallResolver(
 
         val candidates = towerResolver.runResolve(scopeTower, processor, useOrder = kotlinCall.callKind != KotlinCallKind.UNSUPPORTED, name = kotlinCall.name)
 
-        return choseMostSpecific(candidateFactory, resolutionCallbacks, expectedType, candidates)
+        val mostSpecificCandidates = choseMostSpecific(candidateFactory, candidates)
+
+        return kotlinCallCompleter.runCompletion(candidateFactory, mostSpecificCandidates, expectedType, resolutionCallbacks)
     }
 
     fun resolveGivenCandidates(
@@ -88,15 +90,16 @@ class KotlinCallResolver(
         val candidates = towerResolver.runWithEmptyTowerData(KnownResultProcessor(resolutionCandidates),
                                                              TowerResolver.SuccessfulResultCollector(),
                                                              useOrder = true)
-        return choseMostSpecific(candidateFactory, resolutionCallbacks, expectedType, candidates)
+
+        val mostSpecificCandidates = choseMostSpecific(candidateFactory, candidates)
+
+        return kotlinCallCompleter.runCompletion(candidateFactory, mostSpecificCandidates, expectedType, resolutionCallbacks)
     }
 
     private fun choseMostSpecific(
             candidateFactory: SimpleCandidateFactory,
-            resolutionCallbacks: KotlinResolutionCallbacks,
-            expectedType: UnwrappedType?,
             candidates: Collection<KotlinResolutionCandidate>
-    ): CallResolutionResult {
+    ): Collection<KotlinResolutionCandidate> {
         val isDebuggerContext = candidateFactory.scopeTower.isDebuggerContext
 
         var refinedCandidates = candidates
@@ -107,13 +110,12 @@ class KotlinCallResolver(
             }
         }
 
-        val maximallySpecificCandidates = overloadingConflictResolver.chooseMaximallySpecificCandidates(
+        return overloadingConflictResolver.chooseMaximallySpecificCandidates(
                 refinedCandidates,
                 CheckArgumentTypesMode.CHECK_VALUE_ARGUMENTS,
                 discriminateGenerics = true, // todo
-                isDebuggerContext = isDebuggerContext)
-
-        return kotlinCallCompleter.runCompletion(candidateFactory, maximallySpecificCandidates, expectedType, resolutionCallbacks)
+                isDebuggerContext = isDebuggerContext
+        )
     }
 }
 
