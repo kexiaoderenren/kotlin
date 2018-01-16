@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.resolve.calls.inference.model.VariableWithConstraint
 import org.jetbrains.kotlin.resolve.calls.inference.model.checkConstraint
 import org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor
 import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.TypeUtils.UNIT_EXPECTED_TYPE
 import org.jetbrains.kotlin.types.checker.intersectTypes
 import org.jetbrains.kotlin.types.typeUtil.isPrimitiveNumberType
 
@@ -43,6 +44,8 @@ class ResultTypeResolver(
     }
 
     fun findResultTypeOrNull(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): UnwrappedType? {
+        variableWithConstraints.constraints.find { it.kind == ConstraintKind.UPPER && it.type === UNIT_EXPECTED_TYPE }?.let { return it.type }
+
         findResultIfThereIsEqualsConstraint(c, variableWithConstraints, allowedFixToNotProperType = false)?.let { return it }
 
         val subType = findSubType(c, variableWithConstraints)

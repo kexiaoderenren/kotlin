@@ -1,13 +1,11 @@
-fun indexer(): Map<Int, Int> = run {
-    try {
-        emptyMap()
-    }  catch (e: Exception) {
-        emptyMap()
-    }
-}
-
-//fun coercion() {
-//    val x: List<Int> = run {
-//        42
-//    }
+//fun <T> materialize(): T = TODO()
+//
+//val a: Unit = run {
+//    "hello"
 //}
+//
+//val b: Unit = materialize<Int>()
+
+val a: () -> Unit = {
+    if (true) 42
+}

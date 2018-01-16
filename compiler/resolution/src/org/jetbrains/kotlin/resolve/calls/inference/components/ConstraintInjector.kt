@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.resolve.calls.inference.model.ConstraintKind.LOWER
 import org.jetbrains.kotlin.resolve.calls.inference.model.ConstraintKind.UPPER
 import org.jetbrains.kotlin.resolve.calls.model.KotlinCallDiagnostic
 import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.TypeUtils.UNIT_EXPECTED_TYPE
 import org.jetbrains.kotlin.types.checker.CaptureStatus
 import org.jetbrains.kotlin.types.checker.NewCapturedType
 import org.jetbrains.kotlin.types.checker.NewKotlinTypeChecker
@@ -117,7 +118,7 @@ class ConstraintInjector(val constraintIncorporator: ConstraintIncorporator, val
 
         fun runIsSubtypeOf(lowerType: UnwrappedType, upperType: UnwrappedType) {
             with(NewKotlinTypeChecker) {
-                if (!this@TypeCheckerContext.isSubtypeOf(lowerType, upperType)) {
+                if (!this@TypeCheckerContext.isSubtypeOf(lowerType, upperType) && upperType !== UNIT_EXPECTED_TYPE) {
                     // todo improve error reporting -- add information about base types
                     c.addError(NewConstraintError(lowerType, upperType, position))
                 }
