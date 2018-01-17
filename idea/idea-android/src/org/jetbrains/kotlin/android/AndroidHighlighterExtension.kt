@@ -24,9 +24,10 @@ import org.jetbrains.kotlin.idea.highlighter.HighlighterExtension
 import org.jetbrains.kotlin.idea.highlighter.KotlinHighlightingColors
 
 class AndroidHighlighterExtension : HighlighterExtension() {
-    override fun highlightReference(elementToHighlight: PsiElement, descriptor: DeclarationDescriptor): TextAttributesKey? =
-            if (descriptor is AndroidSyntheticProperty)
-                KotlinHighlightingColors.ANDROID_EXTENSIONS_PROPERTY_CALL
-            else
-                null
+    override fun highlightDeclaration(elementToHighlight: PsiElement, descriptor: DeclarationDescriptor): TextAttributesKey? {
+        return if (descriptor is AndroidSyntheticProperty)
+            KotlinHighlightingColors.ANDROID_EXTENSIONS_PROPERTY_CALL
+        else
+            null
+    }
 }

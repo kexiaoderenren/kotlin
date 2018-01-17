@@ -5,18 +5,38 @@
 
 package org.jetbrains.kotlin.idea.highlighter.dsl
 
+import com.intellij.openapi.editor.XmlHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.highlighter.HighlighterExtension
-import org.jetbrains.kotlin.idea.highlighter.KotlinHighlightingColors
+import org.jetbrains.kotlin.resolve.calls.checkers.DslScopeViolationCallChecker.extractDslMarkerFqNames
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
+import org.jetbrains.kotlin.resolve.calls.resolvedCallUtil.getImplicitReceivers
 
-class DslColoringExtension: HighlighterExtension() {
+class DslColoringExtension : HighlighterExtension() {
+    override fun highlightDeclaration(elementToHighlight: PsiElement, descriptor: DeclarationDescriptor): TextAttributesKey? {
+        return null
+    }
+
     override fun highlightCall(elementToHighlight: PsiElement, resolvedCall: ResolvedCall<*>): TextAttributesKey? {
-        if (!isDsl) {
+        val isDslCall = resolvedCall.getImplicitReceivers().any { it.type.extractDslMarkerFqNames().isNotEmpty() }
+        if (!isDslCall) {
             return null
         }
-        return KotlinHighlightingColors.KEYWORD
+        return HTML_DSL_ATTRIBUTES
+    }
+
+    companion object {
+        private val HTML_DSL_ATTRIBUTES by lazy {
+            TextAttributesKey.createTextAttributesKey(
+                    "KOTLIN_DSL::KOTLINX_HTML",
+                    TextAttributes.merge(
+                            XmlHighlighterColors.HTML_TAG.defaultAttributes,
+                            XmlHighlighterColors.HTML_TAG_NAME.defaultAttributes
+                    )
+            )
+        }
     }
 }
